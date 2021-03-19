@@ -6,6 +6,8 @@ import argparse
 from dataset_dfc2018 import DatasetDFC2028 as Dataset
 
 
+from torch.utils.tensorboard import SummaryWriter
+
 def main(config):
 
     print(config)
@@ -22,8 +24,16 @@ def main(config):
 
     logging.info("Creating the loss")
 
+    
+    logging.info("Creating tensorboard summary writer")
+    writer = SummaryWriter(log_dir=os.path.join(config["save_dir"], "logs_tb"))
+
     for epoch in range(config.epoch_max):
-        continue
+
+
+
+        # tensorboard logging
+        # writer.add_scalar('loss', loss, epoch)
 
 
 if __name__ == "__main__":
