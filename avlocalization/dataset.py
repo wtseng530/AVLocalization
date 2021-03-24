@@ -11,7 +11,8 @@ class DFCdataset(torch.utils.data.Dataset):
 
   def process(self, img, idx):
       clip_img = img[:1184, :1184,: ]
-      x = torch.from_numpy(np.moveaxis(clip_img / 255., -1, 0).astype(np.float32))
+      norm_img = (clip_img - np.min(clip_img)) / (np.max(clip_img) - np.min(clip_img) )
+      x = torch.from_numpy(np.moveaxis(norm_img, -1, 0).astype(np.float32))
       x = x[None, ...]  # shape:([1, 3, 11874, 11874])
 
       kh, kw = self.ksize,self.ksize
