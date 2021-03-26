@@ -82,8 +82,8 @@ class biCLR(SimCLR):
       # parser.add_argument("--jitter_strength", type=float, default=1.0, help="jitter strength")
       # parser.add_argument("--dataset", type=str, default="cifar10", help="stl10, cifar10")
       # parser.add_argument("--data_dir", type=str, default=".", help="path to download data")
-      parser.add_argument("--rgb_dir", type= str, default="./data/rgb_50cm.tif", help='path to rgb image')
-      parser.add_argument("--depth_dir", type= str, default="./data/depthmap_50cm.tif", help='path to depth image')
+      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_50cm.tif", help='path to rgb image')
+      parser.add_argument("--depth_dir", type= str, default="../data/depthmap_50cm.tif", help='path to depth image')
       parser.add_argument("--val_split", type = float, default='0.3', help='test and validation data percentage')
 
       # training params
@@ -94,7 +94,7 @@ class biCLR(SimCLR):
       parser.add_argument("--optimizer", default="adam", type=str, help="choose between adam/sgd")
       parser.add_argument("--lars_wrapper", action='store_true', help="apple lars wrapper over optimizer used")
       parser.add_argument('--exclude_bn_bias', action='store_true', help="exclude bn/bias from weight decay")
-      parser.add_argument("--max_epochs", default=100, type=int, help="number of total epochs to run")
+      parser.add_argument("--max_epochs", default=1000, type=int, help="number of total epochs to run")
       parser.add_argument("--max_steps", default=-1, type=int, help="max steps")
       parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
       parser.add_argument("--batch_size", default=128, type=int, help="batch size per gpu")

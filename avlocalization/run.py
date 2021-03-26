@@ -1,9 +1,10 @@
 import pytorch_lightning as pl
 from pl_bolts.callbacks.ssl_online import SSLOnlineEvaluator
 from pytorch_lightning.callbacks import ModelCheckpoint
-import biCLR
+from biCLR import biCLR
 from datamodule_pl import LocDataModule
 from argparse import ArgumentParser
+from utils import OnlineEvaluator
 
 def cli_main():
 
@@ -14,6 +15,7 @@ def cli_main():
 
     dm = LocDataModule(rgb_dir=args.rgb_dir,
                      depth_dir=args.depth_dir,
+                     batch_size= args.batch_size,
                      num_workers=args.num_workers,
                      val_split=args.val_split)
 
@@ -28,16 +30,8 @@ def cli_main():
     #model
     model = biCLR(**args.__dict__)
 
-    online_evaluator = None
-    if args.online_ft:
-    # online eval
-        online_evaluator = SSLOnlineEvaluator(
-            drop_p=0.,
-            hidden_dim=None,
-            z_dim=args.hidden_mlp,
-            num_classes=dm.num_classes,
-            dataset=args.dataset,)
-
+    args.online_ft = True
+    online_evaluator = OnlineEvaluator()
     model_checkpoint = ModelCheckpoint(save_last=True, save_top_k=1, monitor='val_loss')
     callbacks = [model_checkpoint, online_evaluator] if args.online_ft else [model_checkpoint]
 
@@ -51,11 +45,10 @@ def cli_main():
         sync_batchnorm=True if args.gpus > 1 else False,
         precision=32 if args.fp32 else 16,
         callbacks=callbacks,
-        fast_dev_run=args.fast_dev_run
+        fast_dev_run= 1
     )
 
     trainer.fit(model, datamodule=dm)
-
 
 if __name__ == '__main__':
     cli_main()

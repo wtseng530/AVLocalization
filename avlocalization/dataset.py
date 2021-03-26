@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from torchvision.transforms import functional as F
 
+#TODO change to 5cm resolution images
+
 class DFCdataset(torch.utils.data.Dataset):
   def __init__(self, rgbimg, dptimg, transform,  ksize=32):
     self.ksize = ksize
@@ -10,7 +12,8 @@ class DFCdataset(torch.utils.data.Dataset):
     self.transform = transform
 
   def process(self, img, idx):
-      clip_img = img[:1184, :1184,: ]
+      #clip_img = img[:1184, :1184,: ]
+      clip_img = img[:11872, :11872, :]
       norm_img = (clip_img - np.min(clip_img)) / (np.max(clip_img) - np.min(clip_img) )
       x = torch.from_numpy(np.moveaxis(norm_img, -1, 0).astype(np.float32))
       x = x[None, ...]  # shape:([1, 3, 11874, 11874])
