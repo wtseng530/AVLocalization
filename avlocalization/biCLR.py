@@ -82,8 +82,8 @@ class biCLR(SimCLR):
       # parser.add_argument("--jitter_strength", type=float, default=1.0, help="jitter strength")
       # parser.add_argument("--dataset", type=str, default="cifar10", help="stl10, cifar10")
       # parser.add_argument("--data_dir", type=str, default=".", help="path to download data")
-      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_50cm.tif", help='path to rgb image')
-      parser.add_argument("--depth_dir", type= str, default="../data/depthmap_50cm.tif", help='path to depth image')
+      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_5cm.tif", help='path to rgb image')
+      parser.add_argument("--depth_dir", type= str, default="../data/depthmapup(2).tif", help='path to depth image')
       parser.add_argument("--val_split", type = float, default='0.3', help='test and validation data percentage')
 
       # training params

@@ -15,8 +15,8 @@ class OnlineEvaluator(Callback):
         with torch.no_grad():
             pres1, pres2 = pl_module(x1,x2)
             feature_1, feature_2 = pl_module.projection(pres1), pl_module.projection(pres2)
-            feature_1, feature_2 = F.normalize(feature_1, dim=1), F.normalize(feature_1, dim=1)
-            features = torch.cat([feature_1, feature_2 ], dim=0)
+            feature_1, feature_2 = F.normalize(feature_1, dim=1), F.normalize(feature_2, dim=1)
+            features = torch.cat([feature_1, feature_2], dim=0)
         return features
 
     def make_prediction(self,
@@ -58,7 +58,7 @@ class OnlineEvaluator(Callback):
         train_acc_top5 = accuracy_top5(pred,label)
 
         pl_module.log('online_train_acc',train_acc, on_step=True, on_epoch=False)
-        pl_module.log('online_train_acc',train_acc_top5, on_step=True, on_epoch=False)
+        pl_module.log('online_train_acc_top',train_acc_top5, on_step=True, on_epoch=False)
 
     def on_validation_batch_end(
         self, trainer, pl_module: LightningModule, outputs: Any, batch: Any, batch_idx: int, dataloader_idx: int
@@ -76,4 +76,4 @@ class OnlineEvaluator(Callback):
         train_acc_top5 = accuracy_top5(pred, label)
 
         pl_module.log('online_val_acc', train_acc, on_step=False, on_epoch=True,sync_dist=True)
-        pl_module.log('online_val_acc', train_acc_top5, on_step=False, on_epoch=True,sync_dist=True)
+        pl_module.log('online_val_acc_top5', train_acc_top5, on_step=False, on_epoch=True,sync_dist=True)

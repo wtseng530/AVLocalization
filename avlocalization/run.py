@@ -45,7 +45,7 @@ def cli_main():
         sync_batchnorm=True if args.gpus > 1 else False,
         precision=32 if args.fp32 else 16,
         callbacks=callbacks,
-        fast_dev_run= 1
+        fast_dev_run= 0
     )
 
     trainer.fit(model, datamodule=dm)
