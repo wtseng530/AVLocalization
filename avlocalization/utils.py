@@ -10,6 +10,9 @@ from torch.nn import functional as F
 class OnlineEvaluator(Callback):
     def __init__(self,):
         super().__init__()
+        self.accuracy = Accuracy()
+        self.accuracy_top5 = Accuracy(top_k=5)
+
 
     def get_representations(self, pl_module:LightningModule, x1: Tensor ,x2: Tensor) ->Tensor:
         with torch.no_grad():
@@ -51,14 +54,11 @@ class OnlineEvaluator(Callback):
         bs,_,_,_, = batch[0].shape
         label = torch.tensor(list(range(bs, bs + bs)) + list(range(0, 0 + bs))).to('cpu')
 
-        accuracy = Accuracy()
-        accuracy_top5 = Accuracy(top_k=5)
-
-        train_acc = accuracy(pred,label)
-        train_acc_top5 = accuracy_top5(pred,label)
+        train_acc = self.accuracy(pred,label)
+        train_acc_top5 = self.accuracy_top5(pred,label)
 
         pl_module.log('online_train_acc',train_acc, on_step=True, on_epoch=False)
-        pl_module.log('online_train_acc_top',train_acc_top5, on_step=True, on_epoch=False)
+        pl_module.log('online_train_acc_top5',train_acc_top5, on_step=True, on_epoch=False)
 
     def on_validation_batch_end(
         self, trainer, pl_module: LightningModule, outputs: Any, batch: Any, batch_idx: int, dataloader_idx: int
@@ -69,11 +69,8 @@ class OnlineEvaluator(Callback):
         bs,_,_,_, = batch[0].shape
         label = torch.tensor(list(range(bs, bs + bs)) + list(range(0, 0 + bs))).to('cpu')
 
-        accuracy = Accuracy()
-        accuracy_top5 = Accuracy(top_k=5)
-
-        train_acc = accuracy(pred, label)
-        train_acc_top5 = accuracy_top5(pred, label)
+        train_acc = self.accuracy(pred, label)
+        train_acc_top5 = self.accuracy_top5(pred, label)
 
         pl_module.log('online_val_acc', train_acc, on_step=False, on_epoch=True,sync_dist=True)
         pl_module.log('online_val_acc_top5', train_acc_top5, on_step=False, on_epoch=True,sync_dist=True)
