@@ -10,11 +10,11 @@ class DFCdataset(torch.utils.data.Dataset):
     self.rgb = rgbimg
     self.depth = dptimg
     self.transform = transform
+    self.rgbpatch= self.process(self.rgb)
+    self.depthpatch= self.process(self.depth)
 
-  def process(self, img, idx):
-      #clip_img = img[:1184, :1184,: ]
-      clip_img = img[:4800, :4800, :]
-      norm_img = (clip_img - np.min(clip_img)) / (np.max(clip_img) - np.min(clip_img) )
+  def process(self, img):
+      norm_img = (img - np.min(img)) / (np.max(img) - np.min(img) )
       x = torch.from_numpy(np.moveaxis(norm_img, -1, 0).astype(np.float32))
       x = x[None, ...]  # shape:([1, 3, 11874, 11874])
 
@@ -27,17 +27,15 @@ class DFCdataset(torch.utils.data.Dataset):
       patches = patches.view(-1, *patches.size()[3:])  # shape:([2809, 3, 224, 224])
       p_len = len(patches)
       self.len = p_len
-
-      return patches[idx]
+      return patches
 
   def __len__(self):
-    _ = self.process(self.rgb, 0)
+    #_ = self.process(self.rgb)
     return self.len
 
   def __getitem__(self, idx):
-    rgb_patch= torch.FloatTensor(self.process(self.rgb, idx))
-    dpt_patch = torch.FloatTensor(self.process(self.depth, idx))
-
+    rgb_patch = torch.FloatTensor(self.rgbpatch[idx])
+    dpt_patch = torch.FloatTensor(self.rgbpatch[idx])
     if self.transform:
       rgb_patch = self.transform(rgb_patch)
       dpt_patch = self.transform(dpt_patch)

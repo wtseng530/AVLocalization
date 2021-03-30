@@ -59,9 +59,8 @@ class LocDataModule(LightningDataModule):
         self.drop_last = drop_last
 
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Saves files to data_dir
-        """
+        self.rgbimg =  self.rgbimg[:9600, :9600, :]
+        self.dptimg =  self.dptimg[:9600, :9600, :]
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
