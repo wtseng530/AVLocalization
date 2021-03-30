@@ -78,10 +78,6 @@ class biCLR(SimCLR):
       parser.add_argument("--fp32", action='store_true')
 
       # # transform params
-      # parser.add_argument("--gaussian_blur", action="store_true", help="add gaussian blur")
-      # parser.add_argument("--jitter_strength", type=float, default=1.0, help="jitter strength")
-      # parser.add_argument("--dataset", type=str, default="cifar10", help="stl10, cifar10")
-      # parser.add_argument("--data_dir", type=str, default=".", help="path to download data")
       parser.add_argument("--rgb_dir", type= str, default="../data/rgb_5cm.tif", help='path to rgb image')
       parser.add_argument("--depth_dir", type= str, default="../data/depthmapup(2).tif", help='path to depth image')
       parser.add_argument("--val_split", type = float, default='0.3', help='test and validation data percentage')
@@ -97,7 +93,7 @@ class biCLR(SimCLR):
       parser.add_argument("--max_epochs", default=1000, type=int, help="number of total epochs to run")
       parser.add_argument("--max_steps", default=-1, type=int, help="max steps")
       parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
-      parser.add_argument("--batch_size", default=128, type=int, help="batch size per gpu")
+      parser.add_argument("--batch_size", default=512, type=int, help="batch size per gpu")
 
       parser.add_argument("--temperature", default=0.1, type=float, help="temperature parameter in training loss")
       parser.add_argument("--weight_decay", default=1e-6, type=float, help="weight decay")
