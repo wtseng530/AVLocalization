@@ -2,8 +2,6 @@ import numpy as np
 import torch
 from torchvision.transforms import functional as F
 
-#TODO change to 5cm resolution images
-
 class DFCdataset(torch.utils.data.Dataset):
   def __init__(self, rgbimg, dptimg, transform,  ksize=32):
     self.ksize = ksize

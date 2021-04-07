@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
 import skimage.io as io
 from abc import abstractmethod
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, List, Optional, Union, Tuple
 from dataset import DFCdataset
 
 class LocDataModule(LightningDataModule):
@@ -12,13 +12,14 @@ class LocDataModule(LightningDataModule):
     #: Dataset class to use
     dataset_cls: type
     #: A tuple describing the shape of the data
-    dims = (3, 32, 32)
+    #dims: Tuple[int, int, int] = (3, 32, 32)
 
     def __init__(
             self,
             rgb_dir: str = None,
             depth_dir: str = None,
             transform: str = None,
+            patch_dim: int = 32,
             val_split: Union[int, float] = 0.2,
             num_workers: int = 16,
             normalize: bool = False,
@@ -49,6 +50,7 @@ class LocDataModule(LightningDataModule):
         self.rgbimg = io.imread(rgb_dir)
         self.dptimg = io.imread(depth_dir)
         self.transform = transform
+        self.patch_dim = patch_dim
         self.val_split = val_split
         self.num_workers = num_workers
         self.normalize = normalize
@@ -74,7 +76,7 @@ class LocDataModule(LightningDataModule):
             # dataset_val = self.dataset_cls(train=True, transform=val_transforms)
 
             # trans = self.default_transforms() if self.transform is None else self.transform
-            dataset = DFCdataset(self.rgbimg, self.dptimg, transform=self.transform)
+            dataset = DFCdataset(self.rgbimg, self.dptimg, transform=self.transform, ksize= self.patch_dim)
             self.num_samples, _ = self._get_splits(len(dataset))
 
             # Split

@@ -13,7 +13,7 @@ class biCLR(SimCLR):
         feat_dim: int = 128,
         warmup_epochs: int = 10,
         max_epochs: int = 100,
-        temperature: float = 0.1,
+        temperature: float = 0.5,
         first_conv: bool = True,
         maxpool1: bool = True,
         optimizer: str = 'adam',
@@ -78,8 +78,9 @@ class biCLR(SimCLR):
       parser.add_argument("--fp32", action='store_true')
 
       # # transform params
-      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_5cm.tif", help='path to rgb image')
-      parser.add_argument("--depth_dir", type= str, default="../data/depthmapup(2).tif", help='path to depth image')
+      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_train_100.tif", help='path to rgb image')
+      parser.add_argument("--depth_dir", type= str, default="../data/depthmap_train_100.tif", help='path to depth image')
+      parser.add_argument("--patch_dim", type=int, default=32, help= 'image patch size')
       parser.add_argument("--val_split", type = float, default='0.3', help='test and validation data percentage')
 
       # training params
