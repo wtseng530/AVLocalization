@@ -49,14 +49,6 @@ class LocDataModule(LightningDataModule):
 
         super().__init__(*args, **kwargs)
 
-        # factor = 5/ res
-        # if factor == 1:
-        #     self.rgbimg =  resample(factor, rgb_dir)
-        #     self.dptimg =  resample(factor, depth_dir)
-        # else:
-        #     self.rgbimg = io.imread(rgb_dir)
-        #     self.dptimg = io.imread(depth_dir)
-
         self.rgb_dir = rgb_dir
         self.dpt_dir = depth_dir
         self.res = res
@@ -77,11 +69,11 @@ class LocDataModule(LightningDataModule):
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         factor = 5/ self.res
         if factor == 1:
-            self.rgbimg =  resample(factor, self.rgb_dir)
-            self.dptimg =  resample(factor, self.dpt_dir)
-        else:
             self.rgbimg = io.imread(self.rgb_dir)
             self.dptimg = io.imread(self.dpt_dir)
+        else:
+            self.rgbimg = resample(factor, self.rgb_dir)
+            self.dptimg = resample(factor, self.dpt_dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
