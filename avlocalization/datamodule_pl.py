@@ -5,6 +5,7 @@ import skimage.io as io
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Union, Tuple
 from dataset import DFCdataset
+from utils import resample
 
 class LocDataModule(LightningDataModule):
     EXTRA_ARGS: dict = {}
@@ -20,6 +21,7 @@ class LocDataModule(LightningDataModule):
             depth_dir: str = None,
             transform: str = None,
             patch_dim: int = 32,
+            res: int = 5,
             val_split: Union[int, float] = 0.2,
             num_workers: int = 16,
             normalize: bool = False,
@@ -47,10 +49,20 @@ class LocDataModule(LightningDataModule):
 
         super().__init__(*args, **kwargs)
 
-        self.rgbimg = io.imread(rgb_dir)
-        self.dptimg = io.imread(depth_dir)
+        # factor = 5/ res
+        # if factor == 1:
+        #     self.rgbimg =  resample(factor, rgb_dir)
+        #     self.dptimg =  resample(factor, depth_dir)
+        # else:
+        #     self.rgbimg = io.imread(rgb_dir)
+        #     self.dptimg = io.imread(depth_dir)
+
+        self.rgb_dir = rgb_dir
+        self.dpt_dir = depth_dir
+        self.res = res
         self.transform = transform
         self.patch_dim = patch_dim
+        self.res = res
         self.val_split = val_split
         self.num_workers = num_workers
         self.normalize = normalize
@@ -60,9 +72,16 @@ class LocDataModule(LightningDataModule):
         self.pin_memory = pin_memory
         self.drop_last = drop_last
 
+        self.prepare_data()
+
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
-        self.rgbimg =  self.rgbimg[:9600, :9600, :]
-        self.dptimg =  self.dptimg[:9600, :9600, :]
+        factor = 5/ self.res
+        if factor == 1:
+            self.rgbimg =  resample(factor, self.rgb_dir)
+            self.dptimg =  resample(factor, self.dpt_dir)
+        else:
+            self.rgbimg = io.imread(self.rgb_dir)
+            self.dptimg = io.imread(self.dpt_dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """

@@ -1,5 +1,8 @@
 from pytorch_lightning.metrics import Accuracy
 from typing import Optional, Sequence, Tuple, Union,Any
+import rasterio
+from rasterio.enums import Resampling
+import numpy as np
 
 import torch
 from pytorch_lightning import Callback, LightningModule, Trainer
@@ -59,3 +62,25 @@ class OnlineEvaluator(Callback):
             val_acc, val_acc_top5 = self.get_acc(pl_module, batch)
         pl_module.log('online_val_acc', val_acc, on_step=False, on_epoch=True,sync_dist=True)
         pl_module.log('online_val_acc_top5', val_acc_top5, on_step=False, on_epoch=True,sync_dist=True)
+
+
+
+def resample(factor, dir):
+    with rasterio.open(dir) as dataset:
+        # resample data to target shape
+        data = dataset.read(
+            out_shape=(
+                dataset.count,
+                int(dataset.height * factor),
+                int(dataset.width * factor)
+            ),
+            resampling=Resampling.bilinear
+        )
+
+        # scale image transform
+        transform = dataset.transform * dataset.transform.scale(
+            (dataset.width / data.shape[-1]),
+            (dataset.height / data.shape[-2])
+        )
+    image = np.moveaxis(data, 0, -1)
+    return image
