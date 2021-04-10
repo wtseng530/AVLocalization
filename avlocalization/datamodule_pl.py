@@ -2,6 +2,9 @@ import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
 import skimage.io as io
+import numpy as np
+import scipy.ndimage
+import glob
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Union, Tuple
 from dataset import DFCdataset
@@ -68,12 +71,15 @@ class LocDataModule(LightningDataModule):
 
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         factor = 5/ self.res
-        if factor == 1:
-            self.rgbimg = io.imread(self.rgb_dir)
-            self.dptimg = io.imread(self.dpt_dir)
-        else:
-            self.rgbimg = resample(factor, self.rgb_dir)
-            self.dptimg = resample(factor, self.dpt_dir)
+
+        allrgb = [io.imread(img) for img in glob.glob(self.rgb_dir+'/*')]
+        alldpt = [io.imread(dpt) for dpt in glob.glob(self.dpt_dir+'/*')]
+        self.rgbimg = np.concatenate(allrgb, axis=1)
+        self.dptimg = np.concatenate(alldpt, axis=1)
+
+        if factor != 1:
+            self.rgbimg = scipy.ndimage.zoom(self.rgbimg, (factor,factor,1), order=3)
+            self.dptimg = scipy.ndimage.zoom(self.dptimg, (factor,factor,1), order=3)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
