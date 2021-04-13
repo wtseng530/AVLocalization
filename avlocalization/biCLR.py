@@ -68,19 +68,20 @@ class biCLR(SimCLR):
       parser = ArgumentParser(parents=[parent_parser], add_help=False)
 
       # model params
-      parser.add_argument("--arch", default="resnet50", type=str, help="convnet architecture")
+      parser.add_argument("--arch", default="resnet18", type=str, help="convnet architecture")
       # specify flags to store false
       parser.add_argument("--first_conv", action='store_false')
       parser.add_argument("--maxpool1", action='store_false')
-      parser.add_argument("--hidden_mlp", default=2048, type=int, help="hidden layer dimension in projection head")
+      parser.add_argument("--hidden_mlp", default=512, type=int, help="hidden layer dimension in projection head")
       parser.add_argument("--feat_dim", default=128, type=int, help="feature dimension")
       parser.add_argument("--online_ft", action='store_true')
       parser.add_argument("--fp32", action='store_true')
 
       # # transform params
-      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_train_100.tif", help='path to rgb image')
-      parser.add_argument("--depth_dir", type= str, default="../data/depthmap_train_100.tif", help='path to depth image')
+      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_5cm.tif", help='path to rgb image')
+      parser.add_argument("--depth_dir", type= str, default="../data/depthmap_5cm.tif", help='path to depth image')
       parser.add_argument("--patch_dim", type=int, default=32, help= 'image patch size')
+      parser.add_argument("--res", type=int, default=5, help='resolution of aerial image and dsm')
       parser.add_argument("--val_split", type = float, default='0.3', help='test and validation data percentage')
 
       # training params
