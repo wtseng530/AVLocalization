@@ -1,19 +1,32 @@
 import numpy as np
 import torch
+import glob
+import scipy.ndimage
+import skimage.io as io
 from torchvision.transforms import functional as F
 
 class DFCdataset(torch.utils.data.Dataset):
-  def __init__(self, rgbimg, dptimg, transform,  ksize=32):
+  def __init__(self, input1_dir, input2_dir, mode, res,transform,  ksize=32):
+    self.res = res
     self.ksize = ksize
-    self.rgb = rgbimg
-    self.depth = dptimg
+    self.input1_dir = input1_dir
+    self.input2_dir= input2_dir
     self.transform = transform
-    self.rgbpatch= self.process(self.rgb)
-    self.depthpatch= self.process(self.depth)
+    if mode == 'dsm':
+        self.patch1 = self.process(self.input1_dir)
+        self.patch2 = self.process(self.input2_dir)
+    if mode == 'vxl':
+        self.patch1= self.process(self.input1_dir)
+        self.patch2= self.process(self.input2_dir, False)
 
-  def process(self, img):
-      norm_img = (img - np.min(img)) / (np.max(img) - np.min(img) )
-      x = torch.from_numpy(np.moveaxis(norm_img, -1, 0).astype(np.float32))
+  def process(self, dir, norm=True):
+      factor = 5 / self.res
+      allimg = [io.imread(img) for img in glob.glob(dir + '/*')]
+      img = np.concatenate(allimg, axis=1)
+      img = scipy.ndimage.zoom(img, (factor, factor, 1), order=3)
+      if norm:
+          img = (img - np.min(img)) / (np.max(img) - np.min(img) )
+      x = torch.from_numpy(np.moveaxis(img, -1, 0).astype(np.float32))
       x = x[None, ...]  # shape:([1, 3, 11874, 11874])
 
       kh, kw = self.ksize,self.ksize
@@ -28,14 +41,13 @@ class DFCdataset(torch.utils.data.Dataset):
       return patches
 
   def __len__(self):
-    #_ = self.process(self.rgb)
     return self.len
 
   def __getitem__(self, idx):
-    rgb_patch = torch.FloatTensor(self.rgbpatch[idx])
-    dpt_patch = torch.FloatTensor(self.rgbpatch[idx])
+    patch_1 = torch.FloatTensor(self.patch1[idx])
+    patch_2 = torch.FloatTensor(self.patch2[idx])
     if self.transform:
-      rgb_patch = self.transform(rgb_patch)
-      dpt_patch = self.transform(dpt_patch)
+      patch_1 = self.transform(patch_1)
+      patch_2 = self.transform(patch_2)
 
-    return  [rgb_patch, dpt_patch]
+    return  [patch_1, patch_2]

@@ -78,9 +78,10 @@ class biCLR(SimCLR):
       parser.add_argument("--fp32", action='store_true')
 
       # # transform params
-      parser.add_argument("--rgb_dir", type= str, default="../data/rgb_5cm.tif", help='path to rgb image')
-      parser.add_argument("--depth_dir", type= str, default="../data/depthmap_5cm.tif", help='path to depth image')
+      parser.add_argument("--rgb_dir", type= str, default="../data/train/rgb", help='path to rgb image')
+      parser.add_argument("--depth_dir", type= str, default="../data/train/dsm", help='path to depth image')
       parser.add_argument("--patch_dim", type=int, default=32, help= 'image patch size')
+      parser.add_argument('--mode', type=str, default='dsm', choices=['dsm','vxl'], help='branch for local patch training')
       parser.add_argument("--res", type=int, default=5, help='resolution of aerial image and dsm')
       parser.add_argument("--val_split", type = float, default='0.3', help='test and validation data percentage')
 
