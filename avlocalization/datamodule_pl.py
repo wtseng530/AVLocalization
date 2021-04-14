@@ -24,6 +24,7 @@ class LocDataModule(LightningDataModule):
             depth_dir: str = None,
             transform: str = None,
             patch_dim: int = 32,
+            mode:str = "dsm",
             res: int = 5,
             val_split: Union[int, float] = 0.2,
             num_workers: int = 16,
@@ -54,10 +55,8 @@ class LocDataModule(LightningDataModule):
 
         self.rgb_dir = rgb_dir
         self.dpt_dir = depth_dir
-        self.res = res
         self.transform = transform
         self.patch_dim = patch_dim
-        self.res = res
         self.val_split = val_split
         self.num_workers = num_workers
         self.normalize = normalize
@@ -66,39 +65,20 @@ class LocDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.drop_last = drop_last
+        self.dataset = DFCdataset(self.rgb_dir, self.dpt_dir, mode , res, None)
 
         self.prepare_data()
-
-    def prepare_data(self, *args: Any, **kwargs: Any) -> None:
-        factor = 5/ self.res
-
-        allrgb = [io.imread(img) for img in glob.glob(self.rgb_dir+'/*')]
-        alldpt = [io.imread(dpt) for dpt in glob.glob(self.dpt_dir+'/*')]
-        self.rgbimg = np.concatenate(allrgb, axis=1)
-        self.dptimg = np.concatenate(alldpt, axis=1)
-
-        if factor != 1:
-            self.rgbimg = scipy.ndimage.zoom(self.rgbimg, (factor,factor,1), order=3)
-            self.dptimg = scipy.ndimage.zoom(self.dptimg, (factor,factor,1), order=3)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
         Creates train, val, and test dataset
         """
         if stage == "fit" or stage is None:
-            # train_transforms = self.default_transforms() if self.train_transforms is None else self.train_transforms
-            # val_transforms = self.default_transforms() if self.val_transforms is None else self.val_transforms
-
-            # dataset_train = self.dataset_cls(transform=train_transforms)
-            # dataset_val = self.dataset_cls(train=True, transform=val_transforms)
-
-            # trans = self.default_transforms() if self.transform is None else self.transform
-            dataset = DFCdataset(self.rgbimg, self.dptimg, transform=self.transform, ksize= self.patch_dim)
-            self.num_samples, _ = self._get_splits(len(dataset))
+            self.num_samples, _ = self._get_splits(len(self.dataset))
 
             # Split
-            self.dataset_train = self._split_dataset(dataset)
-            self.dataset_eval = self._split_dataset(dataset, train=False)  # eval = val+test
+            self.dataset_train = self._split_dataset(self.dataset)
+            self.dataset_eval = self._split_dataset(self.dataset, train=False)  # eval = val+test
             self.dataset_val = self._split_dataset(self.dataset_eval, train=False)
 
         if stage == "test" or stage is None:
@@ -134,7 +114,7 @@ class LocDataModule(LightningDataModule):
         return splits
 
     def num_samples(self):
-        dataset_len = len(DFCdataset(self.rgbimg, self.dptimg, self.transform))
+        dataset_len = len(self.dataset)
         train_len, _ = self._get_splits(dataset_len)
         return train_len
 

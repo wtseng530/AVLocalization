@@ -14,6 +14,7 @@ def cli_main():
 
     dm = LocDataModule(rgb_dir=args.rgb_dir,
                      depth_dir=args.depth_dir,
+                     mode= args.mode,
                      batch_size= args.batch_size,
                      patch_dim= args.patch_dim,
                      res = args.res,
@@ -35,6 +36,7 @@ def cli_main():
     early_stop = early_stopping.EarlyStopping(monitor='val_loss')
     callbacks = [model_checkpoint, online_evaluator, early_stop] if args.online_ft \
         else [model_checkpoint, early_stop]
+
     # fit
     trainer = pl.Trainer(
         max_epochs=args.max_epochs,
