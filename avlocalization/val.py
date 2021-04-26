@@ -21,7 +21,7 @@ def bbox(idx, ks, data_size):
     X,Y = np.unravel_index(idx, (wl, wh))
     bdbox = []
     for x, y in zip(X,Y):
-        bdbox.append(patches.Rectangle(((y)*ks, (x+1)*ks), ks, ks,linewidth=1, edgecolor='r', facecolor='none'))
+        bdbox.append(patches.Rectangle(((y-1)*ks+1, (x)*ks), ks, ks,linewidth=1, edgecolor='r', facecolor='none'))
     return bdbox
 
 def cli_main ():
@@ -29,6 +29,7 @@ def cli_main ():
     parser = ArgumentParser()
     parser.add_argument("--input1_dir", type=str, default="../data/val/rgb",help="direction to the input for first encoder")
     parser.add_argument("--input2_dir", type=str, default="../data/val/dsm", help="direction to the input for second encoder")
+    parser.add_argument("--patch_dim", type=int, default=32, help='image patch size')
     parser.add_argument("--res", type=int, default=5, help="resolution of training image")
     parser.add_argument('--mode', type=str, default='dsm', choices=['dsm', 'vxl'],
                         help='branch for local patch training')
@@ -36,36 +37,40 @@ def cli_main ():
 
     args = parser.parse_args()
 
-    gbimg = io.imread(glob.glob(args.input1_dir + '/*')[0])
-    gbimg = scipy.ndimage.zoom(gbimg, (5 / args.res, 5 / args.res, 1), order=3)
+    tiles = [8,12]
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    for r, t in enumerate(tiles):
+        gbimg = io.imread(args.input1_dir + '/Tile{}.tif'.format(t))
+        gbimg = scipy.ndimage.zoom(gbimg, (5 / args.res, 5 / args.res, 1), order=3)
 
-    dm = DFCdataset(args.input1_dir, args.input2_dir, args.mode, args.res, None, ksize=32)
-    datasize = len(dm)
-    dataloader = DataLoader(dm, batch_size= datasize, shuffle=False, num_workers=0)
+        dm = DFCdataset(args.input1_dir+ '/Tile{}.tif'.format(t), args.input2_dir+'/Tile{}.tif'.format(t), args.mode, args.res, None, args.patch_dim)
+        datasize = len(dm)
+        dataloader = DataLoader(dm, batch_size= datasize, shuffle=False, num_workers=0)
 
-    wgt = './lightning_logs/version_{}/checkpoints/last.ckpt'.format(args.wgtid)
-    biclr = biCLR.load_from_checkpoint(wgt, strict=False)
-    biclr.eval()
+        wgt = './lightning_logs/version_{}/checkpoints/last.ckpt'.format(args.wgtid)
+        biclr = biCLR.load_from_checkpoint(wgt, strict=False)
+        biclr.eval()
 
-    for batch in dataloader:
-        input1, input2 = batch
+        for batch in dataloader:
+            input1, input2 = batch
 
-    pres1, pres2 = biclr(input1, input2)
-    feature_gl, feature_lcl = biclr.projection(pres1), biclr.projection(pres2)
-    feature_gl, feature_lcl = F.normalize(feature_gl, dim=1), F.normalize(feature_lcl, dim=1)
+        pres1, pres2 = biclr(input1, input2)
+        feature_gl, feature_lcl = biclr.projection(pres1), biclr.projection(pres2)
+        feature_gl, feature_lcl = F.normalize(feature_gl, dim=1), F.normalize(feature_lcl, dim=1)
 
-    similarity_matrix = torch.mm(feature_lcl, feature_gl.T)
-    pred = torch.argmax(similarity_matrix, dim=1)
-    error = [label for label, predict in enumerate(pred) if predict != label]
-    accuracy = 1 - len(error)/ datasize
+        similarity_matrix = torch.mm(feature_lcl, feature_gl.T)
+        pred = torch.argmax(similarity_matrix, dim=1)
+        pred_5 = torch.topk(similarity_matrix, k=5, dim=1,).indices
+        error = [label for label, predict in enumerate(pred) if predict != label]
+        error_5 = [label for label, predict in enumerate(pred_5) if not label in predict]
+        accuracy = 1 - len(error)/ datasize
+        accuracy_5 = 1 - len(error_5)/ datasize
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.imshow(gbimg)
-    if len(error) != 0:
-        ax.add_collection(PatchCollection(bbox(error, 32, gbimg.shape), match_original=True))
-    ax.title.set_text("Accuracy: {:.2f}".format(accuracy))
+        ax[r].imshow(gbimg)
+        ax[r].add_collection(PatchCollection(bbox(error, args.patch_dim, gbimg.shape), match_original=True))
+        ax[r].title.set_text("Accuracy: {:.2f}\nTop5: {:.2f}".format(accuracy, accuracy_5))
+
     fig.savefig('../output/Val_{}_{}.png'.format(args.res, args.wgtid))
-
 
 if __name__ == '__main__':
     cli_main()
