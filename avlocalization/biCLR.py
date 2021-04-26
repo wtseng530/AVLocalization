@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from pl_bolts.models.self_supervised import SimCLR
 from pl_bolts.models.self_supervised.resnets import resnet18, resnet50
+from models import C3D
 
 
 class biCLR(SimCLR):
@@ -59,6 +60,7 @@ class biCLR(SimCLR):
     if self.dataset == 'vxl':
         backbone = resnet18
         return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
+               C3D(num_classes=self.hidden_mlp)
 
     elif self.dataset =='dsm' and self.arch== 'resnet18':
         backbone = resnet18
@@ -76,7 +78,6 @@ class biCLR(SimCLR):
     h1, h2 = self(rgbb, dptb)
     z1 = self.projection(h1)
     z2 = self.projection(h2)
-
     loss = self.nt_xent_loss(z1, z2, self.temperature)
 
     return loss

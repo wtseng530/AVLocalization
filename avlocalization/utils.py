@@ -87,13 +87,14 @@ def resample(factor, dir):
 
 def vxlize(dir, res):
     pc = PyntCloud.from_file(dir)
-    res_meter = res*0.01
+    res_meter = int(100/res)
     voxelgrid_id = pc.add_structure('voxelgrid',
-                                     size_x = res_meter,
-                                     size_y= res_meter,
-                                     n_z= 20,
+                                     n_x=596 * res_meter,
+                                     n_y=601 * res_meter,
+                                     n_z=20,
                                      regular_bounding_box = False)
     # deault the z axis range 20
     voxelgrid = pc.structures[voxelgrid_id]
     binary_feature_vector = voxelgrid.get_feature_vector(mode = 'binary')
+    binary_feature_vector = np.swapaxes(binary_feature_vector, 0,1)
     return binary_feature_vector

@@ -3,12 +3,13 @@ from torch import nn as nn
 from pl_bolts.models.self_supervised.resnets import BasicBlock, Bottleneck, ResNet
 #https://github.com/okankop/Efficient-3DCNNs/blob/master/models/c3d.py
 import math
+from torch.autograd import Variable
 import torch.nn as nn
 
 class C3D(nn.Module):
     def __init__(self,
-                 sample_size,
-                 sample_duration,
+                 #sample_size,
+                 #sample_duration,
                  num_classes=600):
         super(C3D, self).__init__()
         self.group1 = nn.Sequential(
@@ -46,10 +47,11 @@ class C3D(nn.Module):
             nn.ReLU(),
             nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(2, 2, 2), padding=(0, 1, 1)))
 
-        last_duration = int(math.floor(sample_duration / 16))
-        last_size = int(math.ceil(sample_size / 32))
+        # last_duration = int(math.floor(sample_duration / 16))
+        # last_size = int(math.ceil(sample_size / 32))
         self.fc1 = nn.Sequential(
             #nn.Linear((512 * last_duration * last_size * last_size), 4096),
+            #TODO change to the flexible form
             nn.Linear((512*8*5*3),4096),
             nn.ReLU(),
             nn.Dropout(0.5))
@@ -70,7 +72,7 @@ class C3D(nn.Module):
         out = self.fc1(out)
         out = self.fc2(out)
         out = self.fc(out)
-        return out
+        return [out]
 
 
 def get_fine_tuning_parameters(model, ft_portion):
@@ -101,5 +103,4 @@ def get_model(**kwargs):
     """
     model = C3D(**kwargs)
     return model
-
 
