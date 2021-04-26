@@ -32,6 +32,7 @@ class DFCdataset(torch.utils.data.Dataset):
 
       patches = x.unfold(3, kh, dh).unfold(4, kw,dw) # shape: torch.Size([1, 1, 20, 37, 112, 32, 32])
       patches = patches.permute(0,3,4,1,5,6,2).contiguous() # shape: torch.Size([1, 37, 112, 1, 20, 32, 32])
+
       patches = patches.view(-1, *patches.size()[3:]) # shape: torch.Size([4144, 1, 20, 32, 32])
       p_len = len(patches)
       self.len = p_len
