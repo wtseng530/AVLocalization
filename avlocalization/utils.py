@@ -3,6 +3,7 @@ from typing import Optional, Sequence, Tuple, Union,Any
 import rasterio
 from rasterio.enums import Resampling
 import numpy as np
+from pyntcloud import PyntCloud
 
 import torch
 from pytorch_lightning import Callback, LightningModule, Trainer
@@ -39,7 +40,6 @@ class OnlineEvaluator(Callback):
         accuracy_top5 = Accuracy(top_k=5).to(pl_module.device)
 
         return accuracy(pred,label) , accuracy_top5(pred,label)
-
     def on_train_batch_end(
         self,
         trainer: Trainer,
@@ -64,7 +64,6 @@ class OnlineEvaluator(Callback):
         pl_module.log('online_val_acc_top5', val_acc_top5, on_step=False, on_epoch=True,sync_dist=True)
 
 
-
 def resample(factor, dir):
     with rasterio.open(dir) as dataset:
         # resample data to target shape
@@ -84,3 +83,17 @@ def resample(factor, dir):
         )
     image = np.moveaxis(data, 0, -1)
     return image
+
+
+def vxlize(dir, res):
+    pc = PyntCloud.from_file(dir)
+    res_meter = res*0.01
+    voxelgrid_id = pc.add_structure('voxelgrid',
+                                     size_x = res_meter,
+                                     size_y= res_meter,
+                                     n_z= 20,
+                                     regular_bounding_box = False)
+    # deault the z axis range 20
+    voxelgrid = pc.structures[voxelgrid_id]
+    binary_feature_vector = voxelgrid.get_feature_vector(mode = 'binary')
+    return binary_feature_vector
