@@ -22,8 +22,11 @@ class DFCdataset(torch.utils.data.Dataset):
         self.patch2= self.process_vxl(self.input2_dir)
 
   def process_vxl(self, dir):
-      allpc = [vxlize(pc, self.res) for pc in glob.glob(dir+ '/*')]
-      pc = np.concatenate(allpc, axis=1)
+      if os.path.isdir(dir):
+          allpc = [vxlize(pc, self.res) for pc in glob.glob(dir+ '/*')]
+          pc = np.concatenate(allpc, axis=1)
+      else:
+          pc = vxlize(dir, self.res)
       x = torch.from_numpy(np.moveaxis(pc, -1,0).astype(np.float32))
       x = x[None, None, ...]
 

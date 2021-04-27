@@ -22,24 +22,24 @@ class C3D(nn.Module):
             nn.BatchNorm3d(128),
             nn.ReLU(),
             nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
-        # self.group3 = nn.Sequential(
-        #     nn.Conv3d(128, 256, kernel_size=3, padding=1),
-        #     nn.BatchNorm3d(256),
-        #     nn.ReLU(),
-        #     nn.Conv3d(256, 256, kernel_size=3, padding=1),
-        #     nn.BatchNorm3d(256),
-        #     nn.ReLU(),
-        #     nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
-        # self.group4 = nn.Sequential(
-        #     nn.Conv3d(256, 512, kernel_size=3, padding=1),
-        #     nn.BatchNorm3d(512),
-        #     nn.ReLU(),
-        #     nn.Conv3d(512, 512, kernel_size=3, padding=1),
-        #     nn.BatchNorm3d(512),
-        #     nn.ReLU(),
-        #     nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
+        self.group3 = nn.Sequential(
+            nn.Conv3d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm3d(256),
+            nn.ReLU(),
+            nn.Conv3d(256, 256, kernel_size=3, padding=1),
+            nn.BatchNorm3d(256),
+            nn.ReLU(),
+            nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
+        self.group4 = nn.Sequential(
+            nn.Conv3d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm3d(512),
+            nn.ReLU(),
+            nn.Conv3d(512, 512, kernel_size=3, padding=1),
+            nn.BatchNorm3d(512),
+            nn.ReLU(),
+            nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
         self.group5 = nn.Sequential(
-            nn.Conv3d(128, 512, kernel_size=3, padding=1),
+            nn.Conv3d(512, 512, kernel_size=3, padding=1),
             nn.BatchNorm3d(512),
             nn.ReLU(),
             nn.Conv3d(512, 512, kernel_size=3, padding=1),
@@ -52,7 +52,7 @@ class C3D(nn.Module):
         self.fc1 = nn.Sequential(
             #nn.Linear((512 * last_duration * last_size * last_size), 4096),
             #TODO change to the flexible form
-            nn.Linear((512*8*5*3),4096),
+            nn.Linear((512*2*2*1),4096),
             nn.ReLU(),
             nn.Dropout(0.5))
         self.fc2 = nn.Sequential(
@@ -65,8 +65,8 @@ class C3D(nn.Module):
     def forward(self, x):
         out = self.group1(x)
         out = self.group2(out)
-        # out = self.group3(out)
-        # out = self.group4(out)
+        out = self.group3(out)
+        out = self.group4(out)
         out = self.group5(out)
         out = out.view(out.size(0), -1)
         out = self.fc1(out)

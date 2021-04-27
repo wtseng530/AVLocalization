@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
 import skimage.io as io
 import numpy as np
+import random
 import glob
 from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.gridspec as gridspec
 import scipy.ndimage
 
 import torch
@@ -65,6 +67,21 @@ def cli_main ():
         error_5 = [label for label, predict in enumerate(pred_5) if not label in predict]
         accuracy = 1 - len(error)/ datasize
         accuracy_5 = 1 - len(error_5)/ datasize
+
+        figure = plt.figure(figsize=(50,50))
+        ax = [figure.add_subplot(10,6,i+1) for i in range(60)]
+        rs = random.sample(error_5, 10)
+        wrong = pred_5[rs]
+        right = torch.Tensor(rs)[..., None]
+        all= torch.hstack((right,wrong)).flatten()
+        for i, a in enumerate(ax):
+            a.imshow(dm[int(all[i])][1].transpose(0,-1), vmin=0, vmax=1)
+            a.set_xticklabels([])
+            a.set_yticklabels([])
+            a.set_aspect('equal')
+
+        figure.subplots_adjust(wspace=0,hspace=0)
+        figure.savefig('../output/Top5_{}dsm.png'.format(r))
 
         ax[r].imshow(gbimg)
         ax[r].add_collection(PatchCollection(bbox(error, args.patch_dim, gbimg.shape), match_original=True))
