@@ -1,5 +1,8 @@
 from argparse import ArgumentParser
 from pl_bolts.models.self_supervised import SimCLR
+from pl_bolts.models.self_supervised.resnets import resnet18, resnet50
+from models import C3D, ResNet, BasicBlock
+
 
 class biCLR(SimCLR):
   def __init__(
@@ -9,6 +12,7 @@ class biCLR(SimCLR):
         batch_size: int,
         num_nodes: int = 1,
         arch: str = 'resnet50',
+        mode: str = 'dsm',
         hidden_mlp: int = 2048,
         feat_dim: int = 128,
         warmup_epochs: int = 10,
@@ -29,7 +33,7 @@ class biCLR(SimCLR):
         gpus,
         num_samples,
         batch_size,
-        'mydfcdataset',
+        mode,
         num_nodes,
         arch,
         hidden_mlp,
@@ -47,9 +51,29 @@ class biCLR(SimCLR):
         final_lr,
         weight_decay)
 
-    self.encoder1 = self.init_model()
-    self.encoder2 = self.init_model()
+    del self.encoder
+    # self.encoder1 = self.init_model()
+    # self.encoder2 = self.init_model()
+    self.encoder1, self.encoder2 = self.init_model()
 
+  def init_model(self):
+    if self.dataset == 'vxl' and self.arch == 'resnet18':
+        backbone = resnet18
+        return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
+                ResNet(BasicBlock, [1,1,1,1], spatial_size=32, sample_duration=5, num_classes=self.hidden_mlp)
+        # C3D(num_classes=self.hidden_mlp)
+    elif self.dataset == 'vxl' and self.arch == 'resnet50':
+        backbone = resnet50
+        return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
+                ResNet(BasicBlock, [1,1,1,1], spatial_size=32, sample_duration=5, num_classes=self.hidden_mlp)
+        # C3D(num_classes=self.hidden_mlp)
+    elif self.dataset =='dsm' and self.arch== 'resnet18':
+        backbone = resnet18
+    elif self.dataset =='dsm' and self.arch == 'resnet50':
+        backbone = resnet50
+
+    return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
+           backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False)
 
   def forward(self, x1, x2):
     return (self.encoder1(x1)[-1], self.encoder2(x2)[-1])
@@ -59,7 +83,6 @@ class biCLR(SimCLR):
     h1, h2 = self(rgbb, dptb)
     z1 = self.projection(h1)
     z2 = self.projection(h2)
-
     loss = self.nt_xent_loss(z1, z2, self.temperature)
 
     return loss
@@ -89,7 +112,7 @@ class biCLR(SimCLR):
       parser.add_argument("--fast_dev_run", default=1, type=int)
       parser.add_argument("--num_nodes", default=1, type=int, help="number of nodes for training")
       parser.add_argument("--gpus", default=1, type=int, help="number of gpus to train on")
-      parser.add_argument("--num_workers", default=8, type=int, help="num of workers per GPU")
+      parser.add_argument("--num_workers", default=1, type=int, help="num of workers per GPU")
       parser.add_argument("--optimizer", default="adam", type=str, help="choose between adam/sgd")
       parser.add_argument("--lars_wrapper", action='store_true', help="apple lars wrapper over optimizer used")
       parser.add_argument('--exclude_bn_bias', action='store_true', help="exclude bn/bias from weight decay")
