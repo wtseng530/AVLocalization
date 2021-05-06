@@ -31,7 +31,7 @@ class DFCdataset(torch.utils.data.Dataset):
       x = x[None, None, ...]
 
       kh, kw = self.ksize, self.ksize
-      dh, dw = self.ksize, self.ksize
+      dh, dw = self.ksize,self.ksize
 
       patches = x.unfold(3, kh, dh).unfold(4, kw,dw) # shape: torch.Size([1, 1, 20, 37, 112, 32, 32])
       patches = patches.permute(0,3,4,1,5,6,2).contiguous() # shape: torch.Size([1, 37, 112, 1, 20, 32, 32])
@@ -50,8 +50,11 @@ class DFCdataset(torch.utils.data.Dataset):
           img = io.imread(dir)
       img = scipy.ndimage.zoom(img, (factor, factor, 1), order=3)
       img = (img - np.min(img)) / (np.max(img) - np.min(img) )
+      # mean = np.mean(img, axis=(1, 2), keepdims=True)
+      # std = np.std(img, axis=(1, 2), keepdims=True)
+      # img = (img - mean) / std
       x = torch.from_numpy(np.moveaxis(img, -1, 0).astype(np.float32))
-      x = x[None, ...]  # shape:([1, 3, 11874, 11874])
+      x = x[None, ...]  # shape([1, 3, 11874, 11874])
 
       kh, kw = self.ksize,self.ksize
       dh, dw = self.ksize,self.ksize
