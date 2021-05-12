@@ -30,7 +30,7 @@ class DFCdataset(torch.utils.data.Dataset):
       x = torch.from_numpy(np.moveaxis(pc, -1,0).astype(np.float32))
       x = x[None, None, ...]
 
-      kh, kw = self.ksize, self.ksize
+      kh, kw = self.ksize,self.ksize
       dh, dw = self.ksize,self.ksize
 
       patches = x.unfold(3, kh, dh).unfold(4, kw,dw) # shape: torch.Size([1, 1, 20, 37, 112, 32, 32])

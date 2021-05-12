@@ -61,12 +61,10 @@ class biCLR(SimCLR):
         backbone = resnet18
         return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
                 ResNet(BasicBlock, [1,1,1,1], spatial_size=32, sample_duration=5, num_classes=self.hidden_mlp)
-        # C3D(num_classes=self.hidden_mlp)
     elif self.dataset == 'vxl' and self.arch == 'resnet50':
         backbone = resnet50
         return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
                 ResNet(BasicBlock, [1,1,1,1], spatial_size=32, sample_duration=5, num_classes=self.hidden_mlp)
-        # C3D(num_classes=self.hidden_mlp)
     elif self.dataset =='dsm' and self.arch== 'resnet18':
         backbone = resnet18
     elif self.dataset =='dsm' and self.arch == 'resnet50':

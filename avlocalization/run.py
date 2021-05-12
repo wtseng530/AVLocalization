@@ -19,7 +19,8 @@ def cli_main():
                      patch_dim= args.patch_dim,
                      res = args.res,
                      num_workers=args.num_workers,
-                     val_split=args.val_split)
+                     val_split=args.val_split,
+                     shuffle= True)
 
     dm.transform = None
     args.num_samples = dm.num_samples()

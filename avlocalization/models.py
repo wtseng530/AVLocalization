@@ -209,7 +209,7 @@ class ResNet(nn.Module):
             1,
             64,
             kernel_size=7,
-            stride=(1, 2, 2),
+            stride=(2, 2, 2),
             padding=(3, 3, 3),
             bias=False)
         self.bn1 = nn.BatchNorm3d(64)
@@ -226,7 +226,7 @@ class ResNet(nn.Module):
         last_size = int(math.ceil(spatial_size / 32))
         self.avgpool = nn.AvgPool3d(
             (last_duration, last_size, last_size), stride=1)
-        self.fc = nn.Linear(512 * 2, num_classes)
+        self.fc = nn.Linear(512 * last_size * last_size, 512)
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):

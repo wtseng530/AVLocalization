@@ -65,7 +65,7 @@ class LocDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.drop_last = drop_last
-        self.dataset = DFCdataset(self.rgb_dir, self.dpt_dir, mode , res, None)
+        self.dataset = DFCdataset(self.rgb_dir, self.dpt_dir, mode, res, None, self.patch_dim)
 
         self.prepare_data()
 
