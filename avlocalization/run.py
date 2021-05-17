@@ -20,7 +20,7 @@ def cli_main():
                      res = args.res,
                      num_workers=args.num_workers,
                      val_split=args.val_split,
-                     shuffle= True)
+                     shuffle = True)
 
     dm.transform = None
     args.num_samples = dm.num_samples()
