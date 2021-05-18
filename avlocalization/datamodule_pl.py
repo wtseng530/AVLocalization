@@ -66,24 +66,25 @@ class LocDataModule(LightningDataModule):
         self.pin_memory = pin_memory
         self.drop_last = drop_last
         self.dataset = DFCdataset(self.rgb_dir, self.dpt_dir, mode, res, None, self.patch_dim)
-
+        self.dataset_train = self.dataset
+        self.dataset_val = DFCdataset("../data/val/"+ self.rgb_dir[-3:], "../data/val/pc", mode, res, None, self.patch_dim)
         self.prepare_data()
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
         Creates train, val, and test dataset
         """
-        if stage == "fit" or stage is None:
-            self.num_samples, _ = self._get_splits(len(self.dataset))
-
-            # Split
-            self.dataset_train = self._split_dataset(self.dataset)
-            self.dataset_eval = self._split_dataset(self.dataset, train=False)  # eval = val+test
-            self.dataset_val = self._split_dataset(self.dataset_eval, train=False)
-
-        if stage == "test" or stage is None:
-            test_transforms = self.default_transforms() if self.test_transforms is None else self.test_transforms
-            self.dataset_test = self._split_dataset(self.dataset_eval)
+        # if stage == "fit" or stage is None:
+        #     self.num_samples, _ = self._get_splits(len(self.dataset))
+        #
+        #     # Split
+        #     self.dataset_train = self._split_dataset(self.dataset)
+        #     self.dataset_eval = self._split_dataset(self.dataset, train=False)  # eval = val+test
+        #     self.dataset_val = self._split_dataset(self.dataset_eval, train=False)
+        #
+        # if stage == "test" or stage is None:
+        #     test_transforms = self.default_transforms() if self.test_transforms is None else self.test_transforms
+        #     self.dataset_test = self._split_dataset(self.dataset_eval)
 
     def _split_dataset(self, dataset: Dataset, train: bool = True) -> Dataset:
         """
@@ -115,7 +116,8 @@ class LocDataModule(LightningDataModule):
 
     def num_samples(self):
         dataset_len = len(self.dataset)
-        train_len, _ = self._get_splits(dataset_len)
+        # train_len, _ = self._get_splits(dataset_len)
+        train_len = dataset_len
         return train_len
 
     @abstractmethod
@@ -130,15 +132,15 @@ class LocDataModule(LightningDataModule):
         """ The val dataloader """
         return self._data_loader(self.dataset_val)
 
-    def test_dataloader(self, *args: Any, **kwargs: Any) -> Union[DataLoader, List[DataLoader]]:
-        """ The test dataloader """
-        return self._data_loader(self.dataset_test)
+    # def test_dataloader(self, *args: Any, **kwargs: Any) -> Union[DataLoader, List[DataLoader]]:
+    #     """ The test dataloader """
+    #     return self._data_loader(self.dataset_test)
 
     def _data_loader(self, dataset: Dataset, shuffle: bool = False) -> DataLoader:
         return DataLoader(
             dataset,
             batch_size=self.batch_size,
-            shuffle=shuffle,
+            shuffle= shuffle,
             num_workers=self.num_workers,
             drop_last=self.drop_last,
             pin_memory=self.pin_memory
