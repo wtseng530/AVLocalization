@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pl_bolts.models.self_supervised import SimCLR
 from pl_bolts.models.self_supervised.resnets import resnet18, resnet50
 from models import C3D, ResNet, BasicBlock
+import numpy as np
 
 
 class biCLR(SimCLR):
@@ -52,17 +53,11 @@ class biCLR(SimCLR):
         weight_decay)
 
     del self.encoder
-    # self.encoder1 = self.init_model()
-    # self.encoder2 = self.init_model()
     self.encoder1, self.encoder2 = self.init_model()
 
   def init_model(self):
     if self.dataset == 'vxl' and self.arch == 'resnet18':
         backbone = resnet18
-        return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
-                ResNet(BasicBlock, [1,1,1,1], spatial_size=32, sample_duration=5, num_classes=self.hidden_mlp)
-    elif self.dataset == 'vxl' and self.arch == 'resnet50':
-        backbone = resnet50
         return backbone(first_conv=self.first_conv, maxpool1=self.maxpool1, return_all_feature_maps=False),\
                 ResNet(BasicBlock, [1,1,1,1], spatial_size=32, sample_duration=5, num_classes=self.hidden_mlp)
     elif self.dataset =='dsm' and self.arch== 'resnet18':

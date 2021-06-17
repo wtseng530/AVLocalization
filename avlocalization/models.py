@@ -1,5 +1,4 @@
 #https://github.com/okankop/Efficient-3DCNNs/blob/master/models/c3d.py
-import torch.nn as nn
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -218,8 +217,8 @@ class ResNet(nn.Module):
         self.layer1 = self._make_layer(block, 64, layers[0], shortcut_type)
         self.layer2 = self._make_layer(
             block, 64, layers[1], shortcut_type, stride=2)
-        # self.layer3 = self._make_layer(
-        #     block, 64, layers[2], shortcut_type, stride=2)
+        self.layer3 = self._make_layer(
+            block, 64, layers[2], shortcut_type, stride=2)
         self.layer4 = self._make_layer(
             block, 128, layers[3], shortcut_type, stride=2)
         last_duration = int(math.ceil(sample_duration / 16))

@@ -40,9 +40,9 @@ def plot_top5(error_5, pred_5, dm, r):
     for i in range(10):
         for j in range(6):
             rimg, img = dm[int(all[count])][0].transpose(0, -1), dm[int(all[count])][1].transpose(0, -1)
-            mean = torch.mean(img, axis=(1, 2), keepdims=True)
-            std = torch.std(img, axis=(1, 2), keepdims=True)
-            img = (img - mean) / std
+            # mean = torch.mean(img, axis=(1, 2), keepdims=True)
+            # std = torch.std(img, axis=(1, 2), keepdims=True)
+            # img = (img - mean) / std
             count += 1
 
             ax00 = figure1.add_subplot(gs00[i, j])
@@ -58,7 +58,7 @@ def plot_top5(error_5, pred_5, dm, r):
             ax01.set_aspect('equal')
 
     figure1.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure1.savefig('../output/Top5_{}.png'.format(r))
+    figure1.savefig('../thesis_out/Top5_{}.png'.format(r))
 
 
 def cli_main ():
@@ -71,78 +71,55 @@ def cli_main ():
     parser.add_argument('--mode', type=str, default='dsm', choices=['dsm', 'vxl'],
                         help='branch for local patch training')
     parser.add_argument('--wgtid', type=str, help='job number/under which log and weight is stored')
+    parser.add_argument('--all', action= 'store_true', help='evaluate on all the tiles')
     parser.add_argument('--top_5', action= 'store_true', help='visualize top5 error')
 
     args = parser.parse_args()
-    #
-    # if args.mode == 'vxl':
-    #     args.input2_dir = '../data/val/pc'
-    ip1 = glob.glob(args.input1_dir + '/*')
-    ip2 = glob.glob(args.input2_dir + '/*')
+
+    if args.all:
+        ip1 = [args.input1_dir + '/cat.tif']
+        ip2 = [args.input2_dir + '/cat.tif']
+    else:
+        ip1 = glob.glob(args.input1_dir + '/t*')
+        ip2 = glob.glob(args.input2_dir + '/t*')
+
+    wgt = './lightning_logs/version_{}/checkpoints/last.ckpt'.format(args.wgtid)
+    biclr = biCLR.load_from_checkpoint(wgt, strict=False, **args.__dict__)
+    biclr.eval()
 
     fig, ax = plt.subplots(nrows=1, ncols=len(ip1))
     for r, (file1, file2) in enumerate(zip(ip1,ip2)):
         gbimg = io.imread(file1)
-        gbimg = scipy.ndimage.zoom(gbimg, (5 / args.res, 5 / args.res, 1), order=3)
-
-        mean = np.mean(gbimg, axis=(0, 1), keepdims=True)
-        std = np.std(gbimg, axis=(0, 1), keepdims=True)
-        gbimg = (gbimg - mean) / std
+        gbimg = scipy.ndimage.zoom(gbimg, (50 / args.res, 50 / args.res, 1), order=3)
 
         dm = DFCdataset(file1, file2, args.mode, args.res, None, args.patch_dim)
         datasize = len(dm)
 
-        wgt = './lightning_logs/version_{}/checkpoints/last.ckpt'.format(args.wgtid)
-        biclr = biCLR.load_from_checkpoint(wgt, strict=False, **args.__dict__)
-        biclr.eval()
+        dataloader = DataLoader(dm, batch_size=datasize, shuffle=False, num_workers=0)
+        input1, input2 = next(iter(dataloader))
+        pres1, pres2 = biclr(input1, input2)
+        feature_gl, feature_lcl = biclr.projection(pres1), biclr.projection(pres2)
+        glFeature, lclFeature = F.normalize(feature_gl, dim=1), F.normalize(feature_lcl, dim=1)
 
-        # dataloader = DataLoader(dm, batch_size=datasize, shuffle=False, num_workers=0)
-        # input1, input2 = next(iter(dataloader))
-        # pres1, pres2 = biclr(input1, input2)
-        # feature_gl, feature_lcl = biclr.projection(pres1), biclr.projection(pres2)
-        # glFeature, lclFeature = F.normalize(feature_gl, dim=1), F.normalize(feature_lcl, dim=1)
+        similarity_matrix = torch.mm(lclFeature, glFeature.T)
+        pred, pred_5 = torch.argmax(similarity_matrix, dim=1), torch.topk(similarity_matrix, k=5, dim=1,).indices
+        error, error_5 = [label for label, predict in enumerate(pred) if predict != label], [label for label, predict in enumerate(pred_5) if not label in predict]
+        accuracy, accuracy_5 = 1 - len(error) / datasize, 1 - len(error_5) / datasize
 
-        dataloader = DataLoader(dm, batch_size= 64, shuffle=False, num_workers=0)
-        for batch in dataloader:
-            input1, input2 = batch
-            pres1, pres2 = biclr(input1, input2)
-            feature_gl, feature_lcl = biclr.projection(pres1), biclr.projection(pres2)
-            feature_gl, feature_lcl = F.normalize(feature_gl, dim=1), F.normalize(feature_lcl, dim=1)
+        # export the top5 error compare to the true pair
+        if args.top_5:
+            plot_top5(error_5, pred_5, dm, r)
 
-            try: glFeature
-            except NameError:
-                glFeature, lclFeature = feature_gl.clone().detach(), feature_lcl.clone().detach()
-            else:
-                glFeature = torch.vstack((glFeature, feature_gl))
-                lclFeature = torch.vstack((lclFeature, feature_lcl))
+        if args.all:
+            ax.imshow(gbimg)
+            ax.add_collection(PatchCollection(bbox(error_5, args.patch_dim, gbimg.shape), match_original=True))
+            ax.title.set_text("Accuracy: {:.2f}\nTop5: {:.2f}".format(accuracy, accuracy_5))
+        else:
+            ax[r].imshow(gbimg)
+            ax[r].add_collection(PatchCollection(bbox(error_5, args.patch_dim, gbimg.shape), match_original=True))
+            ax[r].title.set_text("Accuracy: {:.2f}\nTop5: {:.2f}".format(accuracy, accuracy_5))
 
-            print('one batch has load complete!')
-
-            similarity_matrix = torch.mm(lclFeature, glFeature.T)
-            pred, pred_5 = torch.argmax(similarity_matrix, dim=1), torch.topk(similarity_matrix, k=3, dim=1, ).indices
-            error, error_5 = [label for label, predict in enumerate(pred) if predict != label], \
-                             [label for label, predict in enumerate(pred_5) if not label in predict]
-            accuracy, accuracy_5 = 1 - len(error) /len(pred), 1 - len(error_5) /len(pred)
-
-            print(len(lclFeature))
-            print('\naccuracy:{}\naccuracy_5:{}'.format(accuracy, accuracy_5))
-            del glFeature, lclFeature
-
-    #     similarity_matrix = torch.mm(lclFeature, glFeature.T)
-    #     pred, pred_5 = torch.argmax(similarity_matrix, dim=1), torch.topk(similarity_matrix, k=5, dim=1,).indices
-    #     error, error_5 = [label for label, predict in enumerate(pred) if predict != label], [label for label, predict in enumerate(pred_5) if not label in predict]
-    #     accuracy, accuracy_5 = 1 - len(error) / datasize, 1 - len(error_5) / datasize
-    #
-    #     # export the top5 error compare to the true pair
-    #     if args.mode == 'dsm' and args.top_5:
-    #         plot_top5(error_5, pred_5, dm, r)
-    #
-    #     ax[r].imshow(gbimg)
-    #     ax[r].add_collection(PatchCollection(bbox(error, args.patch_dim, gbimg.shape), match_original=True))
-    #     ax[r].title.set_text("Accuracy: {:.2f}\nTop5: {:.2f}".format(accuracy, accuracy_5))
-    #     del glFeature, lclFeature
-    #
-    # fig.savefig('../output/Val_{}_{}.png'.format(args.res, args.wgtid))
+    fig.savefig('../thesis_out/Val_{}_{}_{}_top5.png'.format(args.res, args.wgtid, args.all))
 
 if __name__ == '__main__':
     cli_main()

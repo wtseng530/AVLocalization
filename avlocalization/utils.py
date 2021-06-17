@@ -33,7 +33,7 @@ class OnlineEvaluator(Callback):
         torch.diagonal(similarity_matrix).fill_(0)
 
         pred = F.softmax(similarity_matrix, dim=1).to(pl_module.device)
-        bs, _, _, _, = batch[0].shape
+        bs= batch[0].shape[0]
         label = torch.tensor(list(range(bs, bs + bs)) + list(range(0, 0 + bs))).to(pl_module.device)
 
         accuracy = Accuracy().to(pl_module.device)
@@ -110,12 +110,11 @@ def resample(factor, dir):
 
 def vxlize(dir, res):
     pc = PyntCloud.from_file(dir)
-    elv = pc.points[pc.points.raw_classification == 2].z.mean()
-    pc.points = pc.points[(pc.points.z >= elv) & (pc.points.z < 30)]
-    res_meter = int(100/res)
+    pc.points = pc.points[(pc.points.z >= -20) & (pc.points.z < 30)]
+    res_meter = 100/res
     voxelgrid_id = pc.add_structure('voxelgrid',
-                                     n_x=596 * res_meter,
-                                     n_y=601 * res_meter,
+                                     n_x= int(596 * res_meter),
+                                     n_y= int(601 * res_meter),
                                      n_z=20,
                                      regular_bounding_box = False)
     # deault the z axis range 20

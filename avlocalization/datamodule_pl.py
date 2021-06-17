@@ -1,10 +1,6 @@
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
-import skimage.io as io
-import numpy as np
-import scipy.ndimage
-import glob
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Union, Tuple
 from dataset import DFCdataset
@@ -67,24 +63,14 @@ class LocDataModule(LightningDataModule):
         self.drop_last = drop_last
         self.dataset = DFCdataset(self.rgb_dir, self.dpt_dir, mode, res, None, self.patch_dim)
         self.dataset_train = self.dataset
-        self.dataset_val = DFCdataset("../data/val/"+ self.rgb_dir[-3:], "../data/val/pc", mode, res, None, self.patch_dim)
+        self.dataset_val = DFCdataset("../data/val/"+ self.rgb_dir[-3:], "../data/val/"+self.dpt_dir[-3:], mode, res, None, self.patch_dim)
+
         self.prepare_data()
 
-    def setup(self, stage: Optional[str] = None) -> None:
-        """
-        Creates train, val, and test dataset
-        """
-        # if stage == "fit" or stage is None:
-        #     self.num_samples, _ = self._get_splits(len(self.dataset))
-        #
-        #     # Split
-        #     self.dataset_train = self._split_dataset(self.dataset)
-        #     self.dataset_eval = self._split_dataset(self.dataset, train=False)  # eval = val+test
-        #     self.dataset_val = self._split_dataset(self.dataset_eval, train=False)
-        #
-        # if stage == "test" or stage is None:
-        #     test_transforms = self.default_transforms() if self.test_transforms is None else self.test_transforms
-        #     self.dataset_test = self._split_dataset(self.dataset_eval)
+    # def setup(self, stage: Optional[str] = None) -> None:
+    #     """
+    #     Creates train, val, and test dataset
+    #     """
 
     def _split_dataset(self, dataset: Dataset, train: bool = True) -> Dataset:
         """
@@ -131,10 +117,6 @@ class LocDataModule(LightningDataModule):
     def val_dataloader(self, *args: Any, **kwargs: Any) -> Union[DataLoader, List[DataLoader]]:
         """ The val dataloader """
         return self._data_loader(self.dataset_val)
-
-    # def test_dataloader(self, *args: Any, **kwargs: Any) -> Union[DataLoader, List[DataLoader]]:
-    #     """ The test dataloader """
-    #     return self._data_loader(self.dataset_test)
 
     def _data_loader(self, dataset: Dataset, shuffle: bool = False) -> DataLoader:
         return DataLoader(

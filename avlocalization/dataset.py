@@ -8,7 +8,7 @@ from torchvision.transforms import functional as F
 from utils import vxlize
 
 class DFCdataset(torch.utils.data.Dataset):
-  def __init__(self, input1_dir, input2_dir, mode, res,transform,  ksize=32):
+  def __init__(self, input1_dir, input2_dir, mode, res,transform, ksize=32):
     self.res = res
     self.ksize = ksize
     self.input1_dir = input1_dir
@@ -23,7 +23,7 @@ class DFCdataset(torch.utils.data.Dataset):
 
   def process_vxl(self, dir):
       if os.path.isdir(dir):
-          allpc = [vxlize(pc, self.res) for pc in glob.glob(dir+ '/*')]
+          allpc = [vxlize(pc, self.res) for pc in glob.glob(dir+ '/t*')]
           pc = np.concatenate(allpc, axis=1)
       else:
           pc = vxlize(dir, self.res)
@@ -42,17 +42,23 @@ class DFCdataset(torch.utils.data.Dataset):
       return  patches
 
   def process(self, dir):
-      factor = 5 / self.res
+      factor = 50 / self.res
       if os.path.isdir(dir):
-          allimg = [io.imread(img) for img in glob.glob(dir + '/*')]
+          allimg = [io.imread(img) for img in glob.glob(dir + '/t*')]
           img = np.concatenate(allimg, axis=1)
       else:
           img = io.imread(dir)
       img = scipy.ndimage.zoom(img, (factor, factor, 1), order=3)
-      img = (img - np.min(img)) / (np.max(img) - np.min(img) )
-      # mean = np.mean(img, axis=(1, 2), keepdims=True)
-      # std = np.std(img, axis=(1, 2), keepdims=True)
-      # img = (img - mean) / std
+      img = (img - np.min(img)) / (np.max(img) - np.min(img))
+
+      # if 'dsm' in dir or 'las' in dir:
+      #     imax = np.array([0.09565699, -7.2264814, 49.200462], dtype= np.float32)
+      #     imin = np.array([-23.988716, -24.004093, -23.422659], dtype=np.float32)
+      # elif 'rgb' in dir or 'tif' in dir:
+      #     imax = np.array([0, 0, 0], dtype=np.uint8)
+      #     imin = np.array([255,255,255], dtype=np.uint8)
+
+      # img = (img-imin)/ (imax - imin)
       x = torch.from_numpy(np.moveaxis(img, -1, 0).astype(np.float32))
       x = x[None, ...]  # shape([1, 3, 11874, 11874])
 
@@ -73,8 +79,8 @@ class DFCdataset(torch.utils.data.Dataset):
   def __getitem__(self, idx):
     patch_1 = torch.FloatTensor(self.patch1[idx])
     patch_2 = torch.FloatTensor(self.patch2[idx])
+    # patch_2 = patch_2 - torch.mean(patch_2) #TODO
     if self.transform:
       patch_1 = self.transform(patch_1)
       patch_2 = self.transform(patch_2)
-
     return  [patch_1, patch_2]
