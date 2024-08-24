@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Union, Tuple
-from dataset import DFCdataset
+from data_preprocessing import DFCdataset
 from utils import resample
 
 class LocDataModule(LightningDataModule):

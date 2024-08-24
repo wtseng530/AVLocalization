@@ -13,7 +13,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.nn import functional as F
 from biCLR import biCLR
-from dataset import DFCdataset
+from data_preprocessing import DFCdataset
 
 
 def bbox(idx, ks, data_size):
