@@ -1,13 +1,14 @@
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, early_stopping
-
 from utils import OnlineEvaluator
 from argparse import ArgumentParser
 from datamodule_pl import LocDataModule
 
-from biCLR import biCLR
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint, early_stopping
 
-def train():
+from model import biCLR
+
+
+def main():
     parser = ArgumentParser()
 
     parser = biCLR.add_model_specific_args(parser)
@@ -56,4 +57,4 @@ def train():
 
 
 if __name__ == '__main__':
-    train()
+    main()

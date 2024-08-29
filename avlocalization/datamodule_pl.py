@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Union, Tuple
-from data_preprocessing import DFCdataset
+from data_preprocessing import DFCDataset
 from utils import resample
 
 class LocDataModule(LightningDataModule):
@@ -61,9 +61,9 @@ class LocDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.drop_last = drop_last
-        self.dataset = DFCdataset(self.rgb_dir, self.dpt_dir, mode, res, None, self.patch_dim)
+        self.dataset = DFCDataset(self.rgb_dir, self.dpt_dir, mode, res, None, self.patch_dim)
         self.dataset_train = self.dataset
-        self.dataset_val = DFCdataset("../data/val/"+ self.rgb_dir[-3:], "../data/val/"+self.dpt_dir[-3:], mode, res, None, self.patch_dim)
+        self.dataset_val = DFCDataset("../data/val/" + self.rgb_dir[-3:], "../data/val/" + self.dpt_dir[-3:], mode, res, None, self.patch_dim)
 
         self.prepare_data()
 
